@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Portfolio Retiree Builder</title>
+<style>
+body{font-family:Arial;background:#111;color:#eee;margin:0;padding:20px}
+select,input{margin:5px;padding:5px}
+button{padding:8px 12px;margin-top:10px}
+.card{background:#222;padding:15px;margin-top:15px}
+.green{color:#3ddc84}
+.red{color:#ff5c5c}
+.orange{color:#f0ad4e}
+</style>
+</head>
+<body>
+<h2>Portfolio Builder – Retiree Edition</h2>
+<div id="rows"></div>
+<button onclick="addRow()">Add Investment</button>
+<div id="total"></div>
+<button onclick="calculate()">Calculate</button>
+<div id="results" class="card"></div>
+<script>
+const START_BALANCE=1700000,INFLATION=0.025,YEARS=28;
+const ASSETS={spy:{name:"S&P 500"},qqq:{name:"NASDAQ 100"},agg:{name:"US Aggregate Bonds"},gld:{name:"Gold"},mf:{name:"Managed Futures"}};
+let rows=[];
+function addRow(){rows.push({id:Date.now(),aid:'spy',alloc:0});render();}
+function render(){let html='',total=0;rows.forEach(r=>{total+=Number(r.alloc||0);html+=`<div><select onchange="updateAsset(${r.id},this.value)">${Object.keys(ASSETS).map(k=>`<option value="${k}" ${k===r.aid?'selected':''}>${ASSETS[k].name}</option>`).join('')}</select><input type="number" value="${r.alloc}" onchange="updateAlloc(${r.id},this.value)"><button onclick="removeRow(${r.id})">X</button></div>`;});document.getElementById('rows').innerHTML=html;let color=total===100?"green":(total>100?"red":"orange");document.getElementById('total').innerHTML=`Total: <span class="${color}">${total}%</span>`;}
+function updateAsset(id,val){rows.find(r=>r.id===id).aid=val;}
+function updateAlloc(id,val){rows.find(r=>r.id===id).alloc=Number(val);render();}
+function removeRow(id){rows=rows.filter(r=>r.id!==id);render();}
+function calculate(){let total=rows.reduce((s,r)=>s+r.alloc,0);if(total!==100){alert("Total must equal 100%");return;}let avgReturn=0;rows.forEach(r=>{avgReturn+=0.087*(r.alloc/100);});let balance=START_BALANCE,withdraw=balance*0.04;for(let i=0;i<YEARS;i++){balance-=withdraw;balance*=1+(avgReturn);withdraw*=(1+INFLATION);if(balance<=0)break;}document.getElementById('results').innerHTML=`<b>Average Return:</b> ${(avgReturn*100).toFixed(2)}%<br><b>Ending Balance:</b> $${Math.round(balance).toLocaleString()}<br><b>Survived 28 Years:</b> ${balance>0?"YES":"NO"}`;}
+addRow();render();
+</script>
+</body>
+</html>
